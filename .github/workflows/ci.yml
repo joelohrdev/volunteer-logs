@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# The Dev Hub is authenticated via a custom connected app for JWT. The scratch
+# org signup service can't replicate that app into new scratch orgs (error
+# C-1016), so point signup at Salesforce's built-in connected app instead.
+env:
+  SF_SCRATCH_SIGNUP_CONNECTED_APP: PlatformCLI
+  SF_SCRATCH_SIGNUP_CALLBACK_URL: http://localhost:1717/OauthRedirect
+
 jobs:
   validate:
     runs-on: ubuntu-latest
