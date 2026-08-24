@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Salesforce CLI
+        run: npm install --global @salesforce/cli
+
+      - name: Write JWT key to file
+        run: echo "${{ secrets.SF_JWT_KEY }}" > server.key
+
+      - name: Authenticate to Salesforce
+        run: |
+          sf org login jwt \
+            --client-id ${{ secrets.SF_CONSUMER_KEY }} \
+            --jwt-key-file server.key \
+            --username ${{ secrets.SF_USERNAME }} \
+            --alias ciOrg
+
+      - name: Create scratch org
+        run: sf org create scratch --target-dev-hub ciOrg --definition-file config/project-scratch-def.json --alias validationOrg --duration-days 1
+
+      - name: Deploy source
+        run: sf project deploy start --target-org validationOrg --source-dir force-app
+
+      - name: Run Apex tests
+        run: sf apex run test --target-org validationOrg --wait 10 --result-format human --code-coverage --test-level RunLocalTests
+
+      - name: Delete scratch org
+        if: always()
+        run: sf org delete scratch --target-org validationOrg --no-prompt
+
+  deploy:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install --global @salesforce/cli
+      - run: echo "${{ secrets.SF_JWT_KEY }}" > server.key
+      - run: sf org login jwt --client-id ${{ secrets.SF_CONSUMER_KEY }} --jwt-key-file server.key --username ${{ secrets.SF_USERNAME }} --alias targetOrg
+      - run: sf project deploy start --target-org targetOrg --source-dir force-app --test-level RunLocalTests
