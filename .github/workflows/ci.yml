@@ -39,6 +39,11 @@ jobs:
       - name: Deploy source
         run: sf project deploy start --target-org validationOrg --source-dir force-app
 
+      # Metadata API deploys grant no field-level security, so the test-running
+      # user cannot see the custom fields until this is assigned.
+      - name: Assign permission set
+        run: sf org assign permset --name Volunteer_Log_Access --target-org validationOrg
+
       - name: Run Apex tests
         run: sf apex run test --target-org validationOrg --wait 10 --result-format human --code-coverage --test-level RunLocalTests
 
