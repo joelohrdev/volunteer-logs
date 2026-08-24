@@ -1,8 +1,17 @@
 name: CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
+
+# The Dev Hub is authenticated via a custom connected app for JWT. The scratch
+# org signup service can't replicate that app into new scratch orgs (error
+# C-1016), so point signup at Salesforce's built-in connected app instead.
+env:
+  SF_SCRATCH_SIGNUP_CONNECTED_APP: PlatformCLI
+  SF_SCRATCH_SIGNUP_CALLBACK_URL: http://localhost:1717/OauthRedirect
 
 jobs:
   validate:
@@ -30,6 +39,11 @@ jobs:
       - name: Deploy source
         run: sf project deploy start --target-org validationOrg --source-dir force-app
 
+      # Metadata API deploys grant no field-level security, so the test-running
+      # user cannot see the custom fields until this is assigned.
+      - name: Assign permission set
+        run: sf org assign permset --name Volunteer_Log_Access --target-org validationOrg
+
       - name: Run Apex tests
         run: sf apex run test --target-org validationOrg --wait 10 --result-format human --code-coverage --test-level RunLocalTests
 
@@ -39,7 +53,7 @@ jobs:
 
   deploy:
     needs: validate
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
