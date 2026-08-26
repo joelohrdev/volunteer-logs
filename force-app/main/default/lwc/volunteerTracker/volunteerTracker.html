@@ -5,9 +5,9 @@
                 <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
             </template>
 
-            <lightning-input label="Date" type="date" onchange={handleDate}></lightning-input>
-            <lightning-input label="Hours" type="number" step="0.5" onchange={handleHours}></lightning-input>
-            <lightning-input label="Notes" onchange={handleNotes}></lightning-input>
+            <lightning-input label="Date" type="date" value={activityDate} onchange={handleDate}></lightning-input>
+            <lightning-input label="Hours" type="number" step="0.5" value={hours} onchange={handleHours}></lightning-input>
+            <lightning-input label="Notes" value={notes} onchange={handleNotes}></lightning-input>
             <lightning-button
                 label="Add Log"
                 onclick={handleSubmit}
@@ -17,7 +17,7 @@
 
             <template if:true={hasLogs}>
                 <template for:each={logs} for:item="log">
-                    <p key={log.Id}>{log.Activity_Date__c} - {log.Hours__c}  hrs - {log.Notes__c}</p>
+                    <p key={log.Id}>{log.Activity_Date__c} - {log.Hours__c} hrs - {log.Notes__c}</p>
                 </template>
             </template>
             <template if:false={hasLogs}>

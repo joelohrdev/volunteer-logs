@@ -5,7 +5,7 @@ import getLogs from '@salesforce/apex/VolunteerLogController.getLogs';
 import addLog from '@salesforce/apex/VolunteerLogController.addLog';
 
 export default class VolunteerTracker extends LightningElement {
-    logResult;
+    logsResult;
     logs = [];
     isLoading = true;
     hours;
@@ -41,7 +41,8 @@ export default class VolunteerTracker extends LightningElement {
         try {
             await addLog({ activityDate: this.activityDate, hours: this.hours, notes: this.notes });
             this.showToast('Logged', 'Volunteer hours saved.', 'success');
-            this.hourse = null;
+            this.activityDate = null;
+            this.hours = null;
             this.notes = null;
             await refreshApex(this.logsResult);
         } catch (e) {
